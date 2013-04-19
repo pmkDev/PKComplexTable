@@ -13,22 +13,29 @@
 
 @interface ViewController (){
     NSMutableArray *tableContent;
+    UITableView *tableView;
 }
+@property (nonatomic, strong)UITableView *tableView;
 
 @end
 
 @implementation ViewController
+@synthesize tableView;
 
 - (void)viewDidLoad{
     [super viewDidLoad];
 
     //init my table datasource
     tableContent = [[NSMutableArray alloc] init];
-    for (unsigned i = 0; i < 30; i++) {
+    int minSections = 50;
+    int maxSections = 100;
+    int rndSections = minSections + arc4random() % (maxSections - minSections );
+    for (unsigned i = 0; i < rndSections; i++) {
         NSMutableArray *sectionContent = [[NSMutableArray alloc] init];
-
+        
+        int minArrayLength = 1;
         int maxArrayLength = 10;
-        int rndArrayLength =  arc4random() % (maxArrayLength );
+        int rndArrayLength =  minArrayLength + arc4random() % (maxArrayLength - minArrayLength);
         int maxStringLength = 500;
         int rndStringLength =  arc4random() % (maxStringLength );
 
@@ -39,12 +46,12 @@
     }
 }
 
-
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     
@@ -54,14 +61,16 @@
     [self.view addSubview:containerSV];
     
     
-    UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
+    self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
     tableView.dataSource = self;
     tableView.delegate = self;
     
     //calculate the max width of the table content
     CGFloat maxWidth = 0;
-    for (NSMutableArray *array in tableContent) {
-        for (NSString *text in array) {
+    for (unsigned i = 0; i < [tableContent count]; i++) {
+        NSMutableArray *content = [tableContent objectAtIndex:i];
+        for (unsigned k = 0; k < [content count]; k++) {
+            NSString *text = [content objectAtIndex:k];
             CGSize size = [text sizeWithFont:[UIFont systemFontOfSize:16] constrainedToSize:CGSizeMake(9999, 30) lineBreakMode:NSLineBreakByTruncatingTail];
             if (size.width > maxWidth) {
                 maxWidth = size.width;
@@ -107,19 +116,20 @@
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     static NSString *CellIdentifier = @"identifier";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
-        cell.textLabel.font = [UIFont systemFontOfSize:16];
-        cell.textLabel.text = [[tableContent objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
-        NSLog(@"cell.font: %@", cell.textLabel.font);
-    }
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+    cell.textLabel.font = [UIFont systemFontOfSize:16];
+    cell.textLabel.text = [[tableContent objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     return cell;
 }
 
 #pragma mark - UITableView delegate -
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+#pragma  mark - rotations -
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration{
+    [self.tableView reloadData];
 }
 
 @end
